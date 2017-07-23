@@ -23,11 +23,82 @@ var Engine = (function(global) {
         win = global.window,
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
+        gameId,
+        intervalId,
         lastTime;
+    
 
     canvas.width = 505;
     canvas.height = 606;
+
+
+    createGameTimer();
     doc.body.appendChild(canvas);
+
+    //This function serves to create the GameTimer 
+    function createGameTimer() {
+        let timer = document.createElement('span');
+        timer.id = 'timer';
+        timer.style = 'margin-left : 50px; border: 4px solid #ccc';
+        let timerSeconds = document.createElement('span');
+        let timerMinutes = document.createElement('span');
+        timerSeconds.id = 'seconds';
+        timerMinutes.id = 'minutes';
+        timer.innerHTML += 'Timer ';
+        timer.appendChild(timerMinutes);
+        timer.innerHTML += ' : ';
+        timer.appendChild(timerSeconds);
+        gameInfo.appendChild(timer);
+    }
+
+    
+
+    //This function is the timer at work
+    function timeGame() {
+        let seconds = doc.querySelector('#seconds');
+        let minutes = doc.querySelector('#minutes');
+        let timeLeft, minsLeft, secsLeft,
+        timeLimit = Date.now() + 1000 * 60 * 2; //Two minutes in mSecs
+        intervalId = setInterval(updateTime, 1000);
+        function updateTime() {
+            timeLeft = timeLimit - Date.now();
+            minsLeft = Math.floor(timeLeft / 1000 / 60);
+            secsLeft = Math.floor(timeLeft / 1000 % 60);
+            // console.log(secsLeft);
+            seconds.innerHTML = ('0' + (secsLeft >= 0 ? secsLeft : 0)).slice(-2);
+            minutes.innerHTML = ('0' + (minsLeft >= 0 ? minsLeft : 0)).slice(-2);
+            if (timeLeft <= 0) {
+                clearInterval(intervalId);
+                endGame();
+            }
+        }
+
+    }
+
+    
+
+    /* This function serves to end the game and display the final score
+    */
+    function endGame() {
+        // console.log(gameId);
+        // player.updatePlayerInfo(score);
+        // gameInfo.innerHTML = '';
+        ctx.font = '20pt Impact';
+        ctx.fillText("GAME OVER", canvas.width / 2, 80);
+        ctx.strokeText("GAME OVER", canvas.width / 2, 80);
+        ctx.font = '18pt Impact';
+        ctx.fillText("FINAL Score: " + player.score + " points", canvas.width / 2, 105);
+        ctx.strokeText("FINAL Score: " + player.score + " points", canvas.width / 2, 105); 
+        if (player.score && player.score > player.highScore) {
+            player.highScore = player.score;
+            ctx.fillText('CONGRATULATIONS! NEW HIGH SCORE!', canvas.width / 2, 130);
+            ctx.strokeText('CONGRATULATIONS! NEW HIGH SCORE!', canvas.width / 2, 130);
+        }
+        ctx.fillText("Click REFRESH for a new game", canvas.width / 2, 155);
+        ctx.strokeText("Click REFRESH for a new game", canvas.width / 2, 155);
+        win.cancelAnimationFrame(gameId);
+        win.localStorage.setItem('highestScore', player.highScore);
+    }
 
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
@@ -42,9 +113,13 @@ var Engine = (function(global) {
         var now = Date.now(),
             dt = (now - lastTime) / 1000.0;
 
+        //remove canvas eventListener for handling player choice
+        canvas.removeEventListener('click', handlePlayerChoice);
+
         /* Call our update/render functions, pass along the time delta to
          * our update function since it may be used for smooth animation.
          */
+        
         update(dt);
         render();
 
@@ -56,7 +131,12 @@ var Engine = (function(global) {
         /* Use the browser's requestAnimationFrame function to call this
          * function again as soon as the browser is able to draw another frame.
          */
-        win.requestAnimationFrame(main);
+        gameId = win.requestAnimationFrame(main);
+        //Check if player has run out of lives and end game if so
+        if(!player.lives) {
+            clearInterval(intervalId);
+            endGame();
+        }
     }
 
     /* This function does some initial setup that should only occur once,
@@ -66,7 +146,6 @@ var Engine = (function(global) {
     function init() {
         reset();
         lastTime = Date.now();
-        main();
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -94,6 +173,7 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.update(dt);
         });
+        
         player.update();
     }
 
@@ -154,12 +234,81 @@ var Engine = (function(global) {
         player.render();
     }
 
+    /* This function is called in the reset function. It displays a menu for player
+     * sprite choice. It calls handlePlayerChoice as the eventhandler after a preferred
+     * player is clicked on
+     */
+
+    function displayMenu() {
+        //The idea here is to display a menu just to seee how that works
+        var playerImages = [
+            'images/char-boy.png',
+            'images/char-princess-girl.png',
+            'images/char-pink-girl.png',
+            'images/char-cat-girl.png',
+            'images/char-horn-girl.png'   
+        ];
+
+        ctx.font = "30pt Impact";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "white";
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 2;
+        ctx.fillText("CLICK ON YOUR PLAYER", canvas.width / 2, 80);
+        ctx.strokeText("CLICK ON YOUR PLAYER", canvas.width / 2, 80);
+        
+        for (let i = 0; i < playerImages.length; ++i) {
+            ctx.drawImage(Resources.get(playerImages[i]), i * 101, 50);
+        } 
+
+        canvas.addEventListener('click', handlePlayerChoice);
+
+    }
+
+    /* This function is the handler function for the display menu 
+     * I'm making use of Element.getBoundingClientRect()'s returned
+     * object properties left and top to ensure consistency in measured
+     * distances across varying viewport sizes. This function also serves 
+     * as the kick off point for starting the game after handling player choice.
+     */
+    function handlePlayerChoice(e) {
+        let boundary = canvas.getBoundingClientRect();
+        player.sprite = choosePlayer(e.x - boundary.left, e.y - boundary.top);
+        main();
+        timeGame();
+    }
+
     /* This function does nothing but it could have been a good place to
      * handle game reset states - maybe a new game menu or a game over screen
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        // noop
+        // now it calls displayMenu
+        displayMenu();
+    }
+
+
+    /* This is the actual function which sets the appropriate player sprite
+     * chosen by the user.
+     */
+    function choosePlayer(x, y) {
+        //boundary values for setting appropriate sprites were gotten from testing
+        //these are realtive sizes whic remain consitent across varying viewports
+        if (118 <= x && x <= 180 && 100 <= y && y <= 210) { //correct this, this is not boy
+            return global.playerSprite = 'images/char-princess-girl.png';
+        }
+        else if (218 <= x && x <= 280 && 100 <= y && y <= 210) {
+            return 'images/char-pink-girl.png';
+        }
+        else if (318 <= x && x <= 380 && 100 <= y && y <= 210) {
+            return  'images/char-cat-girl.png';
+        }
+        else if (418 <= x && x <= 480 && 100 <= y && y <= 210) {
+            return  'images/char-horn-girl.png';
+        }
+        else {
+            return 'images/char-boy.png'
+        }
     }
 
     /* Go ahead and load all of the images we know we're going to need to
@@ -171,7 +320,12 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/char-boy.png',
+        //Add other sprites
+        'images/char-princess-girl.png',
+        'images/char-pink-girl.png',
+        'images/char-cat-girl.png',
+        'images/char-horn-girl.png'
     ]);
     Resources.onReady(init);
 
@@ -181,3 +335,4 @@ var Engine = (function(global) {
      */
     global.ctx = ctx;
 })(this);
+
