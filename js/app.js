@@ -165,7 +165,7 @@ Player.prototype.handleInput = function(dir) {
 //This method takes care of displaying and updating player's information
 Player.prototype.updatePlayerInfo = function(playerInfo) {
     //set the text content of the passed in HTMLElement
-    playerInfo.textContent = 'Score: ' + this.score + ' Lives: ' + this.lives; 
+    playerInfo.textContent = 'Score: ' + this.score + ' Lives: ' + this.lives + ' High Score: ' + this.highScore; 
 }
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies

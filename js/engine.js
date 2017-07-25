@@ -80,9 +80,6 @@ var Engine = (function(global) {
     /* This function serves to end the game and display the final score
     */
     function endGame() {
-        // console.log(gameId);
-        // player.updatePlayerInfo(score);
-        // gameInfo.innerHTML = '';
         ctx.font = '20pt Impact';
         ctx.fillText("GAME OVER", canvas.width / 2, 80);
         ctx.strokeText("GAME OVER", canvas.width / 2, 80);
@@ -113,8 +110,7 @@ var Engine = (function(global) {
         var now = Date.now(),
             dt = (now - lastTime) / 1000.0;
 
-        //remove canvas eventListener for handling player choice
-        canvas.removeEventListener('click', handlePlayerChoice);
+        
 
         /* Call our update/render functions, pass along the time delta to
          * our update function since it may be used for smooth animation.
@@ -254,8 +250,8 @@ var Engine = (function(global) {
         ctx.fillStyle = "white";
         ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
-        ctx.fillText("CLICK ON YOUR PLAYER", canvas.width / 2, 80);
-        ctx.strokeText("CLICK ON YOUR PLAYER", canvas.width / 2, 80);
+        ctx.fillText("CLICK ON YOUR PLAYER", canvas.width / 2, 60);
+        ctx.strokeText("CLICK ON YOUR PLAYER", canvas.width / 2, 60);
         
         for (let i = 0; i < playerImages.length; ++i) {
             ctx.drawImage(Resources.get(playerImages[i]), i * 101, 50);
@@ -270,10 +266,14 @@ var Engine = (function(global) {
      * object properties left and top to ensure consistency in measured
      * distances across varying viewport sizes. This function also serves 
      * as the kick off point for starting the game after handling player choice.
+     * Also clear the menu from canvas and try removing event listener
      */
     function handlePlayerChoice(e) {
         let boundary = canvas.getBoundingClientRect();
         player.sprite = choosePlayer(e.x - boundary.left, e.y - boundary.top);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        //remove canvas eventListener for handling player choice
+        canvas.removeEventListener('click', handlePlayerChoice);
         main();
         timeGame();
     }
