@@ -7,7 +7,12 @@ This is a version of the Frogger classic arcade game coded by me as part of the 
 
 ## Installation
 
-Just click [**here**](https://siriusted.github.io/frontend-nanodegree-arcade-game/) to start playing. ~~All you need to do is download and unzip the project files or clone this repository on your local machine. Afterwards open the *index.html* file in your browser and start playing.~~
+###Play Online
+Just click [**here**](https://siriusted.github.io/frontend-nanodegree-arcade-game/) to start playing. 
+
+###Run locally
+Clone this repo, `cd` into the project root directory and run `npm start`.
+~~All you need to do is download and unzip the project files or clone this repository on your local machine. Afterwards open the *index.html* file in your browser and start playing.~~
 
 ## How to Play
 
